@@ -17,7 +17,6 @@ class Database
 		{
 			return false;
 		}
-file_put_contents("request.log", "database: " . mysqli_get_server_info($this->conn) . PHP_EOL, FILE_APPEND);
 	}
 	
 	//************************************************************************
@@ -41,7 +40,6 @@ file_put_contents("request.log", "database: " . mysqli_get_server_info($this->co
 		
 		// perform the query
 		$sql = sprintf("SELECT * FROM AuthClients WHERE ClientId='%s'", $client_id);
-file_put_contents("request.log", "get_client: " . $sql . PHP_EOL, FILE_APPEND);
 		return $this->query($sql);
 	}
 
@@ -58,7 +56,6 @@ file_put_contents("request.log", "get_client: " . $sql . PHP_EOL, FILE_APPEND);
 		
 		// perform the query
 		$sql = sprintf("SELECT * FROM AuthRequests WHERE Guid='%s'", $guid);
-file_put_contents("request.log", "get_request: " . $sql . PHP_EOL, FILE_APPEND);
 		return $this->query($sql);
 	}
 
@@ -77,7 +74,23 @@ file_put_contents("request.log", "get_request: " . $sql . PHP_EOL, FILE_APPEND);
 		$sql = sprintf("INSERT INTO AuthRequests(Guid,ClientId,RequestedScope,RedirectUri,Platform,Version,Idiom) " .
 						"VALUES('%s','%s','%s','%s','%s','%s','%s');", $guid, $client_id, $scope, $redirect_uri,
 						$platform, $version, $idiom);
-file_put_contents("request.log", "add_request: " . $sql . PHP_EOL, FILE_APPEND);
+		$q = $this->conn->query($sql);
+		return !empty($q) && $q == 1;
+	}
+	
+	//************************************************************************
+	//	add_code
+	//************************************************************************
+	function add_code($guid, $code, $error)
+	{
+		// make sure we're connected to the database
+		if ($this->conn->connect_error)
+		{
+			return null;
+		}
+		
+		// perform the query
+		$sql = sprintf("UPDATE AuthRequests SET Code='%s',Error='%s',CodeTime=NOW() WHERE Guid='%s';", $code, $error, $guid);
 		$q = $this->conn->query($sql);
 		return !empty($q) && $q == 1;
 	}
@@ -97,7 +110,6 @@ file_put_contents("request.log", "add_request: " . $sql . PHP_EOL, FILE_APPEND);
 		$sql = sprintf("UPDATE AuthRequests SET AccessToken='%s',TokenType='%s'," .
 						"AuthorizedScope='%s',ExpiresIn=%s,RefreshToken='%s',TokenTime=NOW() WHERE Guid='%s';",
 						$access_token, $token_type, $scope, $expires_in, $refresh_token, $guid);
-file_put_contents("request.log", "update_request: " . $sql . PHP_EOL, FILE_APPEND);
 		$q = $this->conn->query($sql);
 		return !empty($q) && $q == 1;
 	}
