@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Timers;
 using System.Web;
 using Newtonsoft.Json;
+using Xamarin.Forms;
 using Xamarin.Essentials;
 
 namespace FrozenNorth.SpotifyAuth
@@ -37,7 +38,8 @@ namespace FrozenNorth.SpotifyAuth
 		/// <param name="scope">Scope to use for the request.</param>
 		/// <param name="authUrl">URL of the athentication server.</param>
 		/// <param name="redirectUrl">Redirect URL to use for the request.</param>
-		public static async void GetCodeAsync(string clientId, Scope scope, string authUrl, string redirectUrl)
+		/// <param name="webView">Web view to display the requests in.</param>
+		public static void GetCode(string clientId, Scope scope, string authUrl, string redirectUrl, WebView webView)
 		{
 			// initialize the state
 			Reset();
@@ -47,7 +49,7 @@ namespace FrozenNorth.SpotifyAuth
 			AuthUrl = authUrl;
 			RedirectUrl = redirectUrl;
 
-			// perform authentication in the browser
+			// perform authentication in the web view
 			string url = AuthUrl +
 							"?action=auth" +
 							"&guid=" + Guid +
@@ -57,14 +59,14 @@ namespace FrozenNorth.SpotifyAuth
 							"&platform=" + DeviceInfo.Platform +
 							"&version=" + DeviceInfo.VersionString +
 							"&idiom=" + DeviceInfo.Idiom;
-			await Browser.OpenAsync(Uri.EscapeUriString(url));
+			webView.Source = url;
 		}
 
 		/// <summary>
 		/// Set the authorization code from the response to the authorization code request.
 		/// </summary>
 		/// <param name="uri">URI of the response to the authorization request.</param>
-		public static async void SetCodeAsync(Uri uri)
+		public static async Task<bool> SetCodeAsync(Uri uri)
 		{
 			// get and check the URI query fields
 			var fields = HttpUtility.ParseQueryString(uri.Query);
@@ -74,12 +76,12 @@ namespace FrozenNorth.SpotifyAuth
 			{
 				string error = fields.Get("error");
 				Error = string.IsNullOrEmpty(error) ? "Unknown Error" : error;
-				return;
+				return false;
 			}
 			if (state != Guid)
 			{
 				Error = string.Format("Unknown Error", state, Guid);
-				return;
+				return false;
 			}
 			Code = code;
 
@@ -91,7 +93,9 @@ namespace FrozenNorth.SpotifyAuth
 				IsAuthenticated = true;
 				StartTimer();
 				AuthChanged?.Invoke(Tokens, EventArgs.Empty);
+				return true;
 			}
+			return false;
 		}
 
 		/// <summary>
