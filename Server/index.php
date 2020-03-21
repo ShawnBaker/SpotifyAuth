@@ -1,5 +1,6 @@
 <?php
-include 'database.php';
+include_once 'utils.php';
+include_once 'database.php';
 
 //************************************************************************
 // get_token
@@ -171,74 +172,21 @@ function get_auth_code($guid, $client_id, $scope, $redirect_uri, $platform, $ver
 		"state" => $guid,
 		"show_dialog" => 'false'
 	]);
-	header("location:" . $location, true, 303);
-	die();
-}
-
-//************************************************************************
-// clean_request_input
-//************************************************************************
-function clean_request_input($data)
-{
-    $data = trim($data);
-    $data = stripslashes($data);
-    $data = htmlspecialchars($data);
-    return $data;
-}
-
-//************************************************************************
-// page_begin
-//************************************************************************
-function page_begin($title)
-{
-	echo "<!DOCTYPE HTML PUBLIC  \"-//W3C//DTD HTML 4.0//EN\">\n";
-	echo "<html>\n\n";
-	echo "<head>\n";
-	echo "<meta http-equiv=Content-Type content=\"text/html; charset=iso-8859-1\">\n";
-	echo "<title>" . $title . "</title>\n";
-	echo "</head>\n<body>\n\n";
-}
-
-//************************************************************************
-// page_end
-//************************************************************************
-function page_end()
-{
-	echo "\n</body>\n</html>\n";
-}
-
-//************************************************************************
-// error_page
-//************************************************************************
-function error_page($error)
-{
-    page_begin("ERROR");
-    echo "<p>" . $error . "</p>";
-    page_end();
-}
-
-//************************************************************************
-// mylog
-//************************************************************************
-function mylog($name, $value)
-{
-	file_put_contents("request.log", $name . ": " . print_r($value, true) . PHP_EOL, FILE_APPEND);
+	header("Location:" . $location, true, 303);
+	exit();
 }
 
 //************************************************************************
 // mainline
 //************************************************************************
-mylog("request", $_REQUEST);
+//mylog("index", $_REQUEST);
 
-// perform action based on action
+// perform the requested action
 $action = clean_request_input($_REQUEST["action"]);
-mylog("action", $action);
 $guid = clean_request_input($_REQUEST["guid"]);
-mylog("guid", $guid);
 if ($action === "token")
 {
     $code = clean_request_input($_POST["value"]);
-mylog("code", $code);
     echo get_token($guid, $code);
 }
 else if ($action === "refresh")
