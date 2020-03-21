@@ -148,6 +148,10 @@
     <PackageReference Include="Xamarin.Essentials" Version="1.5.1" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\SpotifyAuth\SpotifyAuth.csproj">
+      <Project>{b692fe6c-ce8c-4195-b7c3-deb16259286c}</Project>
+      <Name>SpotifyAuth</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Example\Example.csproj">
       <Project>{4A52C20A-0A60-48A3-BAF2-0BD594D2297A}</Project>
       <Name>Example</Name>
