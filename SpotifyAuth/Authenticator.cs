@@ -19,6 +19,8 @@ namespace FrozenNorth.SpotifyAuth
 		public static string AuthUrl { get; private set; } = "";
 		public static string RedirectUrl { get; private set; } = "";
 		public static bool IsAuthenticated { get; private set; } = false;
+		public static bool IsLoggedOut => string.IsNullOrEmpty(Guid);
+		public static bool IsLoggedIn => !string.IsNullOrEmpty(Guid) && !string.IsNullOrEmpty(Authenticator.AccessToken);
 		public static string Error { get; private set; } = "";
 		public static string Code { get; private set; } = "";
 		public static string Guid { get; private set; } = "";
@@ -39,7 +41,7 @@ namespace FrozenNorth.SpotifyAuth
 		/// <param name="authUrl">URL of the athentication server.</param>
 		/// <param name="redirectUrl">Redirect URL to use for the request.</param>
 		/// <param name="webView">Web view to display the requests in.</param>
-		public static void GetCode(string clientId, Scope scope, string authUrl, string redirectUrl, WebView webView)
+		public static void RequestCode(string clientId, Scope scope, string authUrl, string redirectUrl, WebView webView = null)
 		{
 			// initialize the state
 			Reset();
@@ -59,11 +61,18 @@ namespace FrozenNorth.SpotifyAuth
 							"&platform=" + DeviceInfo.Platform +
 							"&version=" + DeviceInfo.VersionString +
 							"&idiom=" + DeviceInfo.Idiom;
-			webView.Source = url;
+			if (webView != null)
+			{
+				webView.Source = url;
+			}
+			else
+			{
+				Browser.OpenAsync(Uri.EscapeUriString(url));
+			}
 		}
 
 		/// <summary>
-		/// Set the authorization code from the response to the authorization code request.
+		/// Set the authorization code from the response to the RequestCode().
 		/// </summary>
 		/// <param name="uri">URI of the response to the authorization request.</param>
 		public static async Task<bool> SetCodeAsync(Uri uri)
