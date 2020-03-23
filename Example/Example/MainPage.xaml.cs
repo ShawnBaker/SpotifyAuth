@@ -28,13 +28,13 @@ namespace Example
 		{
 			MainThread.BeginInvokeOnMainThread(() =>
 			{
-				if (string.IsNullOrEmpty(Authenticator.Guid))
+				if (Authenticator.IsLoggedOut)
 				{
 					statusLabel.Text = "Logged out.";
 					loginButton.Text = "Login";
 					refreshButton.IsEnabled = false;
 				}
-				else if (string.IsNullOrEmpty(Authenticator.AccessToken))
+				else if (!Authenticator.IsLoggedIn)
 				{
 					statusLabel.Text = "Logging in...";
 					loginButton.Text = "Cancel";
@@ -52,7 +52,7 @@ namespace Example
 		/// <summary>
 		/// Starts or stops the authentication process.
 		/// </summary>
-		private async void loginButton_Clicked(object sender, System.EventArgs e)
+		private async void loginButton_Clicked(object sender, EventArgs e)
 		{
 			if (loginButton.Text == "Login")
 			{
@@ -61,6 +61,7 @@ namespace Example
 			}
 			else
 			{
+				DependencyService.Get<IDeleteCookies>().DeleteAll();
 				Authenticator.Reset();
 			}
 			SetState();
@@ -69,14 +70,21 @@ namespace Example
 		/// <summary>
 		/// Refreshes the access token.
 		/// </summary>
-		private void refreshButton_Clicked(object sender, System.EventArgs e)
+		private void refreshButton_Clicked(object sender, EventArgs e)
 		{
 			Authenticator.Refresh();
 			SetState();
 		}
 
-		private void Authenticator_AuthChanged(object sender, System.EventArgs e)
+		/// <summary>
+		/// Pop the login page when authentication succeeds.
+		/// </summary>
+		private void Authenticator_AuthChanged(object sender, EventArgs e)
 		{
+			if (Authenticator.IsLoggedIn && Navigation.NavigationStack[Navigation.NavigationStack.Count - 1] is LoginPage)
+			{
+				Navigation.PopAsync();
+			}
 			SetState();
 		}
 	}
