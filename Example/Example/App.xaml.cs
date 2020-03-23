@@ -1,6 +1,5 @@
-﻿using System;
+﻿// Copyright © 2020 Shawn Baker using the MIT License.
 using Xamarin.Forms;
-using Xamarin.Forms.Xaml;
 
 namespace Example
 {
