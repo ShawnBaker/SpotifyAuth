@@ -8,7 +8,7 @@
 			 Title="Spotify Login">
     <ContentPage.Content>
 		<Grid>
-			<WebView x:Name="webView"/>
+			<WebView x:Name="webView" BackgroundColor="LightGray"/>
 			<Label x:Name="loginLabel" Text="Logging into Spotify..." HorizontalOptions="Center" VerticalOptions="Center"/>
 		</Grid>
     </ContentPage.Content>
