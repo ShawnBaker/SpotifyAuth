@@ -12,11 +12,13 @@ namespace Example
 	public partial class LoginPage : ContentPage
 	{
 		// authentication constants
-		private const int TimeoutTime = 10000;
+		private const int TimeoutTime = 60000;
 		private const int FailureTime = 2000;
+
 		private const string AuthClientId = "clientid";
 		private const string AuthUrl = "https://website/auth/index.php";
-		private const string AuthRedirectUrl = "https://website/auth/redirect.php";
+		private const string AuthInternalRedirectUrl = "https://website/auth/redirect.php";
+		private const string AuthExternalRedirectUrl = "spotauth://ca.frozen.spotauth/auth";
 		private const Scope AuthScope = //Scope.AppRemoteControl | 
 										Scope.PlaylistModifyPrivate |
 										Scope.PlaylistModifyPublic |
@@ -57,8 +59,29 @@ namespace Example
 		{
 			base.OnAppearing();
 
-			Authenticator.GetCode(AuthClientId, AuthScope, AuthUrl, AuthRedirectUrl, webView);
-			StartTimeoutTimer();
+			if (Authenticator.IsLoggedOut)
+			{
+				if (DeviceInfo.Platform == DevicePlatform.UWP)
+				{
+					Authenticator.RequestCode(AuthClientId, AuthScope, AuthUrl, AuthInternalRedirectUrl, webView);
+				}
+				else
+				{
+					Authenticator.RequestCode(AuthClientId, AuthScope, AuthUrl, AuthExternalRedirectUrl);
+				}
+				StartTimeoutTimer();
+			}
+		}
+
+		/// <summary>
+		/// Stops the timers.
+		/// </summary>
+		protected override void OnDisappearing()
+		{
+			base.OnDisappearing();
+
+			StopFailureTimer();
+			StopTimeoutTimer();
 		}
 
 		/// <summary>
@@ -66,7 +89,7 @@ namespace Example
 		/// </summary>
 		private async void WebView_Navigated(object sender, WebNavigatedEventArgs e)
 		{
-			if (e.Url.StartsWith(AuthRedirectUrl))
+			if (e.Url.StartsWith(AuthInternalRedirectUrl))
 			{
 				Uri uri = new Uri(e.Url);
 				if (await Authenticator.SetCodeAsync(uri))
