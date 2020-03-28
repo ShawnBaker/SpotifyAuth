@@ -1,6 +1,7 @@
 ﻿// Copyright © 2020 Shawn Baker using the MIT License.
 using Foundation;
 using UIKit;
+using FrozenNorth.SpotifyAuth;
 
 namespace ExternalBrowser.iOS
 {
@@ -13,6 +14,16 @@ namespace ExternalBrowser.iOS
             LoadApplication(new App());
 
             return base.FinishedLaunching(app, options);
+        }
+
+        public override bool OpenUrl(UIApplication application, NSUrl url, string sourceApplication, NSObject annotation)
+        {
+            // get the authorization response URI
+            System.Uri uri = new System.Uri(url.AbsoluteString);
+
+            // set the authorization code
+            Auth.SetCodeAsync(uri);
+            return true;
         }
     }
 }
