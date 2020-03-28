@@ -11,13 +11,13 @@ namespace Example
 	public partial class MainPage : ContentPage
 	{
 		/// <summary>
-		/// Constructor - Initializes the page and starts authentication.
+		/// Constructor - Initializes the page and starts authorization.
 		/// </summary>
 		public MainPage()
 		{
 			InitializeComponent();
 
-			Authenticator.AuthChanged += Authenticator_AuthChanged;
+			Auth.Changed += Auth_Changed;
 			loginButton_Clicked(this, EventArgs.Empty);
 		}
 
@@ -28,13 +28,13 @@ namespace Example
 		{
 			MainThread.BeginInvokeOnMainThread(() =>
 			{
-				if (Authenticator.IsLoggedOut)
+				if (Auth.IsUnauthorized)
 				{
 					statusLabel.Text = "Logged out.";
 					loginButton.Text = "Login";
 					refreshButton.IsEnabled = false;
 				}
-				else if (!Authenticator.IsLoggedIn)
+				else if (!Auth.IsAuthorized)
 				{
 					statusLabel.Text = "Logging in...";
 					loginButton.Text = "Cancel";
@@ -50,7 +50,7 @@ namespace Example
 		}
 
 		/// <summary>
-		/// Starts or stops the authentication process.
+		/// Starts or stops the authorization process.
 		/// </summary>
 		private async void loginButton_Clicked(object sender, EventArgs e)
 		{
@@ -61,8 +61,8 @@ namespace Example
 			}
 			else
 			{
-				DependencyService.Get<IDeleteCookies>().DeleteAll();
-				Authenticator.Reset();
+				//DependencyService.Get<IDeleteCookies>().DeleteAll();
+				Auth.Reset();
 			}
 			SetState();
 		}
@@ -72,16 +72,16 @@ namespace Example
 		/// </summary>
 		private void refreshButton_Clicked(object sender, EventArgs e)
 		{
-			Authenticator.Refresh();
+			Auth.Refresh();
 			SetState();
 		}
 
 		/// <summary>
-		/// Pop the login page when authentication succeeds.
+		/// Pop the login page when authorization succeeds.
 		/// </summary>
-		private void Authenticator_AuthChanged(object sender, EventArgs e)
+		private void Auth_Changed(object sender, EventArgs e)
 		{
-			if (Authenticator.IsLoggedIn && Navigation.NavigationStack[Navigation.NavigationStack.Count - 1] is LoginPage)
+			if (Auth.IsAuthorized && Navigation.NavigationStack[Navigation.NavigationStack.Count - 1] is LoginPage)
 			{
 				Navigation.PopAsync();
 			}
