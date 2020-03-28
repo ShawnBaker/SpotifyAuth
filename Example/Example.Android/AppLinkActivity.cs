@@ -7,7 +7,7 @@ using FrozenNorth.SpotifyAuth;
 
 namespace Example.Droid
 {
-    [Activity(Label = "Spotify Authentication")]
+    [Activity(Label = "Spotify Authorization")]
     [IntentFilter(new[] { Intent.ActionView }, DataScheme = "spotauth", DataHost = "ca.frozen.spotauth", DataPathPrefix = "/auth", Categories = new[] { Intent.CategoryDefault, Intent.CategoryBrowsable })]
     public class AppLinkActivity : Activity
     {
@@ -15,10 +15,12 @@ namespace Example.Droid
         {
             base.OnCreate(savedInstanceState);
 
-            // set the code in the authenticator
+            // get the authorization response URI
             Android.Net.Uri uriAndroid = Intent.Data;
             Uri uri = new Uri(uriAndroid.ToString());
-            await Authenticator.SetCodeAsync(uri);
+
+            // set the authorization code
+            await Auth.SetCodeAsync(uri);
 
             // return to the main activity
             Finish();

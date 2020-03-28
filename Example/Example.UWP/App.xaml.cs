@@ -39,12 +39,12 @@ namespace Example.UWP
             base.OnActivated(args);
             if (args.Kind == ActivationKind.Protocol)
             {
-                // get the authentication response URI
+                // get the authorization response URI
                 ProtocolActivatedEventArgs protocolArgs = (ProtocolActivatedEventArgs)args;
                 Uri uri = protocolArgs.Uri;
 
-                // set the code in the authenticator from the URI
-                Authenticator.SetCodeAsync(uri);
+                // set the authorization code
+                Auth.SetCodeAsync(uri);
             }
         }
 
