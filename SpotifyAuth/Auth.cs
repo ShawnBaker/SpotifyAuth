@@ -11,34 +11,37 @@ using Xamarin.Essentials;
 
 namespace FrozenNorth.SpotifyAuth
 {
-	public static class Authenticator
+	public static class Auth
 	{
 		// public properties
 		public static string ClientId { get; private set; } = "";
 		public static Scope Scope { get; private set; } = Scope.None;
 		public static string AuthUrl { get; private set; } = "";
 		public static string RedirectUrl { get; private set; } = "";
-		public static bool IsAuthenticated { get; private set; } = false;
-		public static bool IsLoggedOut => string.IsNullOrEmpty(Guid);
-		public static bool IsLoggedIn => !string.IsNullOrEmpty(Guid) && !string.IsNullOrEmpty(Authenticator.AccessToken);
 		public static string Error { get; private set; } = "";
 		public static string Code { get; private set; } = "";
 		public static string Guid { get; private set; } = "";
-		public static Tokens Tokens { get; private set; } = null;
-		public static string AccessToken => (Tokens != null) ? Tokens.AccessToken : "";
+		public static string AccessToken => (tokens != null) ? tokens.AccessToken : "";
+		public static string RefreshToken => (tokens != null) ? tokens.RefreshToken : "";
+		public static string TokenType => (tokens != null) ? tokens.TokenType : "";
+		public static string GrantedScope => (tokens != null) ? tokens.Scope : "";
+		public static double ExpiresIn => (tokens != null) ? tokens.ExpiresIn : 0;
+		public static bool IsAuthorized => !string.IsNullOrEmpty(Guid) && !string.IsNullOrEmpty(AccessToken);
+		public static bool IsUnauthorized => string.IsNullOrEmpty(Guid);
 
 		// public events
-		public static event EventHandler AuthChanged = null;
+		public static event EventHandler Changed = null;
 
 		// private variables
-		private static Timer timer = null;
+		private static Timer refreshTimer = null;
+		private static Tokens tokens = null;
 
 		/// <summary>
 		/// Request an authorization code from the server.
 		/// </summary>
 		/// <param name="clientId">Client ID to use for the request.</param>
 		/// <param name="scope">Scope to use for the request.</param>
-		/// <param name="authUrl">URL of the athentication server.</param>
+		/// <param name="authUrl">URL of the authorization server.</param>
 		/// <param name="redirectUrl">Redirect URL to use for the request.</param>
 		/// <param name="webView">Web view to display the requests in.</param>
 		public static void RequestCode(string clientId, Scope scope, string authUrl, string redirectUrl, WebView webView = null)
@@ -51,7 +54,7 @@ namespace FrozenNorth.SpotifyAuth
 			AuthUrl = authUrl;
 			RedirectUrl = redirectUrl;
 
-			// perform authentication in the web view
+			// get the URL
 			string url = AuthUrl +
 							"?action=auth" +
 							"&guid=" + Guid +
@@ -61,6 +64,8 @@ namespace FrozenNorth.SpotifyAuth
 							"&platform=" + DeviceInfo.Platform +
 							"&version=" + DeviceInfo.VersionString +
 							"&idiom=" + DeviceInfo.Idiom;
+
+			// perform authorization in the web view or in the browser
 			if (webView != null)
 			{
 				webView.Source = url;
@@ -95,34 +100,31 @@ namespace FrozenNorth.SpotifyAuth
 			Code = code;
 
 			// get the access and refresh tokens
-			Tokens tokens = await GetTokenAsync("token", Code);
+			tokens = await GetTokenAsync("token", Code);
 			if (tokens != null)
 			{
-				Tokens = tokens;
-				IsAuthenticated = true;
-				StartTimer();
-				AuthChanged?.Invoke(Tokens, EventArgs.Empty);
+				StartRefreshTimer();
+				Changed?.Invoke(ClientId, EventArgs.Empty);
 				return true;
 			}
 			return false;
 		}
 
 		/// <summary>
-		/// Resets the state to unauthenticated.
+		/// Resets the state to unauthorized.
 		/// </summary>
 		public static void Reset()
 		{
-			StopTimer();
+			StopRefreshTimer();
 
 			ClientId = "";
 			Scope = Scope.None;
 			AuthUrl = "";
 			RedirectUrl = "";
-			IsAuthenticated = false;
 			Error = "";
 			Code = "";
 			Guid = "";
-			Tokens = null;
+			tokens = null;
 		}
 
 		/// <summary>
@@ -130,9 +132,9 @@ namespace FrozenNorth.SpotifyAuth
 		/// </summary>
 		public static void Refresh()
 		{
-			if (IsAuthenticated)
+			if (IsAuthorized)
 			{
-				HandleTimerElapsed(null, null);
+				RefreshTimer_Elapsed(null, null);
 			}
 		}
 
@@ -155,7 +157,7 @@ namespace FrozenNorth.SpotifyAuth
 				HttpClient client = new HttpClient();
 				HttpResponseMessage response = await client.PostAsync(AuthUrl, content);
 
-				Tokens tokens = JsonConvert.DeserializeObject<Tokens>(await response.Content.ReadAsStringAsync());
+				tokens = JsonConvert.DeserializeObject<Tokens>(await response.Content.ReadAsStringAsync());
 				if (tokens != null && string.IsNullOrEmpty(tokens.Error) && !string.IsNullOrEmpty(tokens.AccessToken))
 				{
 					return tokens;
@@ -171,44 +173,43 @@ namespace FrozenNorth.SpotifyAuth
 		/// <summary>
 		/// Start the refresh timer.
 		/// </summary>
-		private static void StartTimer()
+		private static void StartRefreshTimer()
 		{
-			StopTimer();
-			if (Tokens != null)
+			StopRefreshTimer();
+			if (tokens != null)
 			{
-				timer = new Timer(Tokens.ExpiresIn * 1000);
-				timer.Elapsed += HandleTimerElapsed;
-				timer.AutoReset = false;
-				timer.Start();
+				refreshTimer = new Timer(tokens.ExpiresIn * 1000);
+				refreshTimer.Elapsed += RefreshTimer_Elapsed;
+				refreshTimer.AutoReset = false;
+				refreshTimer.Start();
 			}
 		}
 
 		/// <summary>
 		/// Stop the refresh timer.
 		/// </summary>
-		private static void StopTimer()
+		private static void StopRefreshTimer()
 		{
-			if (timer != null)
+			if (refreshTimer != null)
 			{
-				timer.Stop();
-				timer.Dispose();
-				timer = null;
+				refreshTimer.Stop();
+				refreshTimer.Dispose();
+				refreshTimer = null;
 			}
 		}
 
 		/// <summary>
 		/// Refresh the access token when the timer goes off.
 		/// </summary>
-		private static async void HandleTimerElapsed(object sender, ElapsedEventArgs e)
+		private static async void RefreshTimer_Elapsed(object sender, ElapsedEventArgs e)
 		{
-			StopTimer();
-			Tokens tokens = await GetTokenAsync("refresh", Tokens.RefreshToken);
+			StopRefreshTimer();
+			tokens = await GetTokenAsync("refresh", tokens.RefreshToken);
 			if (tokens != null)
 			{
-				Tokens = tokens;
-				StartTimer();
-				AuthChanged?.Invoke(Tokens, EventArgs.Empty);
+				StartRefreshTimer();
 			}
+			Changed?.Invoke(ClientId, EventArgs.Empty);
 		}
 	}
 }
