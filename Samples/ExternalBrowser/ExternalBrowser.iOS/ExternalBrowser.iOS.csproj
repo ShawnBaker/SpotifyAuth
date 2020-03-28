@@ -131,8 +131,12 @@
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />
   <ItemGroup>
     <ProjectReference Include="..\ExternalBrowser\ExternalBrowser.csproj">
-      <Project>{989898E4-B545-41F8-9BE3-50D6FC2A2DAE}</Project>
+      <Project>{6144B411-184A-4170-B42A-2E8B057F5ED1}</Project>
       <Name>ExternalBrowser</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\SpotifyAuth\SpotifyAuth.csproj">
+      <Project>{37AD5D8A-1930-47ED-8DA5-EAE955814C06}</Project>
+      <Name>SpotifyAuth</Name>
     </ProjectReference>
   </ItemGroup>
 </Project>
