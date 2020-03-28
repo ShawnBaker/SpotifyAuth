@@ -88,7 +88,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\InternalWebView\InternalWebView.csproj">
-      <Project>{70CF1D9E-53EB-4D5B-9741-7E76414F8557}</Project>
+      <Project>{EF1F7347-A2ED-4842-88A3-2394B10D7158}</Project>
       <Name>InternalWebView</Name>
     </ProjectReference>
   </ItemGroup>
