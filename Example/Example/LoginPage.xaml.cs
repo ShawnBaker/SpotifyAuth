@@ -11,7 +11,7 @@ namespace Example
 	[XamlCompilation(XamlCompilationOptions.Compile)]
 	public partial class LoginPage : ContentPage
 	{
-		// authentication constants
+		// authorization constants
 		private const int TimeoutTime = 60000;
 		private const int FailureTime = 2000;
 
@@ -53,21 +53,21 @@ namespace Example
 		}
 
 		/// <summary>
-		/// Starts authentication.
+		/// Starts authorization.
 		/// </summary>
 		protected override void OnAppearing()
 		{
 			base.OnAppearing();
 
-			if (Authenticator.IsLoggedOut)
+			if (Auth.IsUnauthorized)
 			{
 				if (DeviceInfo.Platform == DevicePlatform.UWP)
 				{
-					Authenticator.RequestCode(AuthClientId, AuthScope, AuthUrl, AuthInternalRedirectUrl, webView);
+					Auth.RequestCode(AuthClientId, AuthScope, AuthUrl, AuthInternalRedirectUrl, webView);
 				}
 				else
 				{
-					Authenticator.RequestCode(AuthClientId, AuthScope, AuthUrl, AuthExternalRedirectUrl);
+					Auth.RequestCode(AuthClientId, AuthScope, AuthUrl, AuthExternalRedirectUrl);
 				}
 				StartTimeoutTimer();
 			}
@@ -91,8 +91,11 @@ namespace Example
 		{
 			if (e.Url.StartsWith(AuthInternalRedirectUrl))
 			{
+				// get the authorization response URI
 				Uri uri = new Uri(e.Url);
-				if (await Authenticator.SetCodeAsync(uri))
+
+				// set the authorization code
+				if (await Auth.SetCodeAsync(uri))
 				{
 					await Navigation.PopAsync();
 				}
@@ -153,7 +156,7 @@ namespace Example
 				loginLabel.Text = "Failed to login to Spotify.";
 				loginLabel.TextColor = Color.Red;
 			});
-			Authenticator.Reset();
+			Auth.Reset();
 
 			failureTimer = new Timer(FailureTime);
 			failureTimer.Elapsed += HandleFailureTimerElapsed;
