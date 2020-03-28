@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace FrozenNorth.SpotifyAuth
 {
-    public class Tokens
+    internal class Tokens
     {
         [JsonProperty("access_token")]
         public string AccessToken { get; set; }
