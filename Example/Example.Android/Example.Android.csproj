@@ -15,7 +15,6 @@
     <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
     <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
     <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
-    <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
     <TargetFrameworkVersion>v9.0</TargetFrameworkVersion>
     <AndroidEnableSGenConcurrent>true</AndroidEnableSGenConcurrent>
     <AndroidUseAapt2>true</AndroidUseAapt2>
@@ -98,7 +97,7 @@
       <Name>SpotifyAuth</Name>
     </ProjectReference>
     <ProjectReference Include="..\Example\Example.csproj">
-      <Project>{4A52C20A-0A60-48A3-BAF2-0BD594D2297A}</Project>
+      <Project>{10CBC6E6-C872-414D-9748-D449B5112F2A}</Project>
       <Name>Example</Name>
     </ProjectReference>
   </ItemGroup>
